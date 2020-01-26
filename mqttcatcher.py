@@ -76,14 +76,12 @@ class MqttCatcher(object):
         try:
             _data = json.loads(str(msg.payload))            
             if msg.topic == self.WLAB_AUTH_TOPIC:
-#                 self.station_register(_data["uid"], _data)
                 _param = {
                     'uid': _data["uid"],
                     'desc': _data
                     }
                 ipc_send_receive('SET_DESC', json.dumps(_param))           
             elif msg.topic == self.WLAB_DB_TOPIC:
-#                 self.station_sample(_data)
                 _param = {
                     'sample': _data
                     }

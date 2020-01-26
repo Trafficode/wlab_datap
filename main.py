@@ -15,11 +15,13 @@ from mqttcatcher import MqttCatcher
 
 from ipc import IPC_Server
 
-if Config.CONFIG_DEVELOP:
+if Config.DEVELOP:
     log_file_path = 'log/dataprovider.log'
-    db_path = 'db'
+    db_path = 'database'
     if not os.path.exists('log'):
         os.mkdir('log')
+    if not os.path.exists(db_path):
+        os.mkdir(db_path)
 else:
     log_file_path = '/home/wlab/weatherlab/log/dataprovider.log'
     db_path = '/home/wlab/weatherlab/db'
@@ -33,7 +35,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-EXIT_CODE = Config.CONFIG_EXIT_CODE_EXIT
+EXIT_CODE = Config.EXIT_CODE_EXIT
 
 class DatabaseBot(object):
     ''' DatabaseBot '''
@@ -56,74 +58,75 @@ class DatabaseBot(object):
         # Command registred, just start
         self.__cmd_server.start()
         
-        # Get data from stations
+        # Catch data from stations
         self.data_catcher = MqttCatcher('194.42.111.14', 1883)
         self.data_catcher.start()
         
-    # {'uid':'12345678ABCD', 'desc':''}
     def cmd_station_register(self, _json_param):
+        logger.info('cmd_station_register()')
         param = json.loads(_json_param)
         self.__data_prvider.stationRegister(param['uid'], param['desc'])
         return json.dumps('OK')
     
-    # {'sample':''}
     def cmd_store_sample(self, _json_param):
+        logger.info('cmd_store_sample()')
         param = json.loads(_json_param)
         self.__data_prvider.stationSampleStore(param['sample'])
         return json.dumps('OK')
     
-    # {'uid':'12345678ABCD', 'serie':'Temperature', 'date':'2010-06'}
     def cmd_monthly_data(self, _json_param):
+        logger.info('cmd_monthly_data()')
         param = json.loads(_json_param)
         req_data = self.__data_prvider.getSerieMonthlyData(
                         param["uid"], param["serie"], param["date"])
         return json.dumps(req_data)
     
-    # {'uid':'0234294532AB', 'serie':'Temperature', 'date':'2010'}
     def cmd_yearly_data(self, _json_param):
+        logger.info('cmd_yearly_data()')
         param = json.loads(_json_param)
         req_data = self.__data_prvider.getSerieYearlyData(
                         param["uid"], param["serie"], param["date"])
         return json.dumps(req_data)
     
-    # {'uid':'0234294532AB', 'serie':'Temperature', 'date':'YYYY-MM-DD'} 
     def cmd_daily_data(self, _json_param):
+        logger.info('cmd_daily_data()')
         param = json.loads(_json_param)
         req_data = self.__data_prvider.getSerieDayData(
                         param["uid"], param["serie"], param["date"])                                    
         return json.dumps(req_data)
     
-    # None
     def cmd_datatree(self, _json_param):
+        logger.info('cmd_datatree()')
         req_data = self.__data_prvider.getStationsDateTree()
         return json.dumps(req_data)
     
-    # None
     def cmd_newest(self, _json_param):
+        logger.info('cmd_newest()')
         req_data = self.__data_prvider.getStationsNewest()
         return json.dumps(req_data)
     
-    # None
     def cmd_desc(self, _json_param):
+        logger.info('cmd_desc()')
         req_data = self.__data_prvider.getStationsDesc()
         return json.dumps(req_data)
     
     def proc(self):
+        logger.info('proc()')
         while True:
             time.sleep(1)
             
 if __name__ == '__main__':
     logger.critical('\n\n')
-    logger.critical('Startup develop: %s' % str(Config.CONFIG_DEVELOP))
+    logger.critical('Startup develop: %s' % str(Config.DEVELOP))
     logger.critical('Startup path: %s' % str(os.getcwd()))
-    logger.critical('Version: %s' %  Config.CONFIG_WLAB_VERSION)
+    logger.critical('Version: %s' %  Config.WLAB_VERSION)
     
     try:
         app = DatabaseBot(db_path)
         app.proc()
     except:
         logger.exception(traceback.format_exc())
-        EXIT_CODE = Config.CONFIG_EXIT_CODE_EXCEPTION
+        EXIT_CODE = Config.EXIT_CODE_EXCEPTION
         
     time.sleep(1)
     os._exit(EXIT_CODE)
