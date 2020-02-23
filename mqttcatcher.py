@@ -1,8 +1,7 @@
 #   ------------------------------------------------------------------------- /
-#   WeatherLab mqttcatcher.py
-#   $Rev: 242 $
-#   $Author: kkuras $
-#   $Date: 2018-01-29 23:12:01 +0100 (pon) $
+#   wlab_datap: mqttcatcher.py
+#   Created on: 29 sie 2019
+#   Author: Trafficode
 #   ------------------------------------------------------------------------- /
 
 import json
