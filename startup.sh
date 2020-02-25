@@ -1,12 +1,14 @@
 #!/bin/bash
 
 #   ------------------------------------------------------------------------- /
-#   wlab_datap: main.py
-#   Created on: 29 sie 2019
+#   wlab_datap: startup.sh
+#   Created on: 23 feb 2020
 #   Author: Trafficode
 #   ------------------------------------------------------------------------- /
 
-LOG_FILE=startup.log
+cd /home/wlab/weatherlab/wlabapp/wlab_datap/
+
+LOG_FILE=/home/wlab/weatherlab/log/dataprovider.log
 
 log ()	{
 	echo $(date) - 'startup.sh' - $1 >> $LOG_FILE
@@ -14,7 +16,7 @@ log ()	{
 
 log ' '
 log ' '
-log 'wlab_web_dataprovider start from: '$(pwd)
+log 'wlab_datap start from: '$(pwd)
 
 while [ true ]; do
 	python main.py
@@ -41,8 +43,8 @@ while [ true ]; do
 	sleep 10
 done
 
-log 'exit from wlab_web_dataprovider.sh ... '
+log 'exit from wlab_datap ... '
 
-# -----------------------------------------------------------------------------
+#   ------------------------------------------------------------------------- /
 #    end of file
-# -----------------------------------------------------------------------------
+#   ------------------------------------------------------------------------- /

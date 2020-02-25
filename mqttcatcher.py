@@ -1,13 +1,15 @@
+#-*- coding: utf-8 -*-
 #   ------------------------------------------------------------------------- /
 #   wlab_datap: mqttcatcher.py
 #   Created on: 29 sie 2019
 #   Author: Trafficode
 #   ------------------------------------------------------------------------- /
-
+import time
 import json
 import logging
 import traceback
 import threading
+from globals import Globals 
 from ipc import ipc_send_receive
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import MQTTv311, MQTTv31
@@ -40,18 +42,20 @@ class MqttCatcher(object):
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.proc_tid = threading.Thread(
-            name='send_thread', 
+            name='mqtt_thread', 
             target=self.__proc
         )
     
     def start(self):
         self.logger.critical("start()")
-        try:
-            self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
-            self.proc_tid.start()
-        except:
-            self.logger.exception("Exception in start:\n%s" % \
-                                  traceback.format_exc())
+        while True:
+            try:
+                self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
+                self.proc_tid.start()
+                break
+            except:
+                self.logger.exception("Connection failed, try again...")
+                time.sleep(5)
             
     def __proc(self):
         self.logger.critical("__proc()")
@@ -79,12 +83,18 @@ class MqttCatcher(object):
                     'uid': _data["uid"],
                     'desc': _data
                     }
-                ipc_send_receive('SET_DESC', json.dumps(_param))           
+                ipc_send_receive(Globals.CONFIG_IPC_DP_SERVER_PORT, 
+                                 'SET_DESC', 
+                                 json.dumps(_param),
+                                 2000)           
             elif msg.topic == self.WLAB_DB_TOPIC:
                 _param = {
                     'sample': _data
                     }
-                ipc_send_receive('SET_SAMPLE', json.dumps(_param))
+                ipc_send_receive(Globals.CONFIG_IPC_DP_SERVER_PORT,
+                                 'SET_SAMPLE', 
+                                 json.dumps(_param),
+                                 2000)
             else:
                 self.logger.error("Received message to unknown topic")
         except:

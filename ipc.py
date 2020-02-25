@@ -1,5 +1,7 @@
+#!/usr/bin/python
+#-*- coding: utf-8 -*-
 #   ------------------------------------------------------------------------- /
-#   wlab_datap: main.py
+#   wlab_datap: mqttcatcher.py
 #   Created on: 29 sie 2019
 #   Author: Trafficode
 #   ------------------------------------------------------------------------- /
@@ -25,8 +27,7 @@ def ipc_send_receive(_port, _cmd, _jstr, _timeout):
         splited = _recv.split(' ', 1)
         if splited[0] != 'ERROR':
             rc = splited[1]
-        else:
-            logger.error('Command server error:\n%s\n' % splited[1])
+        
     except:
         logger.exception(traceback.format_exc()) 
     return(rc)
@@ -99,16 +100,18 @@ class IPC_Server(threading.Thread):
                                 self.logger.error('Unknown command: %s' % 
                                                   str(_cmd))
                         except:
-                            _exception = traceback.format_exc()
-                            self.logger.exception(_exception)
-                            answer = _exception
-                            _cmd = 'ERROR'
+                            self.logger.exception(traceback.format_exc())
+                            answer = 'ERROR 0'
+                            if not _cmd:
+                                _cmd = 'ERROR'
                             
                         connection.sendall('%s %s' % (_cmd, answer))
                     else:
                         self.logger.info('no more data from %s' % 
                                          str(client_address))
                         break
+            except:
+                self.logger.exception(traceback.format_exc())
             finally:
                 self.logger.info('Clean up the connection')
                 connection.close()
@@ -116,6 +119,6 @@ class IPC_Server(threading.Thread):
         self.logger.info('IPC_Server.run done.')
         self.__done_evt.set()
 
-# -----------------------------------------------------------------------------
+#   ------------------------------------------------------------------------- /
 #    end of file
-# -----------------------------------------------------------------------------
+#   ------------------------------------------------------------------------- /

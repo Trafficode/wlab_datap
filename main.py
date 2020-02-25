@@ -1,3 +1,6 @@
+#!/usr/bin/python
+
+#-*- coding: utf-8 -*-
 #   ------------------------------------------------------------------------- /
 #   wlab_datap: main.py
 #   Created on: 29 sie 2019
@@ -9,25 +12,30 @@ import json
 import time
 import logging
 import traceback
-from user_config import Config
+from globals import Globals
 from dataprovider import DataProvider
 from mqttcatcher import MqttCatcher
 
 from ipc import IPC_Server
 
-if Config.DEVELOP:
-    log_file_path = 'log/dataprovider.log'
-    db_path = 'database'
-    if not os.path.exists('log'):
-        os.mkdir('log')
-    if not os.path.exists(db_path):
-        os.mkdir(db_path)
+if os.path.exists(Globals.RELEASE_CONFIG_FILE):
+    config_f = open(Globals.RELEASE_CONFIG_FILE, 'r')
+    Config = json.load(config_f)
+    config_f.close()
 else:
-    log_file_path = '/home/wlab/weatherlab/log/dataprovider.log'
-    db_path = '/home/wlab/weatherlab/db'
+    # develop mode
+    Config = {
+        'logpath': 'log',
+        'dbpath': 'database'
+    }
+
+if not os.path.exists(Config['logpath']):
+    os.mkdir(Config['logpath'])
+if not os.path.exists(Config['dbpath']):
+    os.mkdir(Config['dbpath'])
     
 logging.basicConfig(
-    filename = log_file_path, 
+    filename = os.path.join(Config['logpath'], 'dataprovider.log'), 
     format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
     atefmt = '%m/%d/%Y %I:%M:%S %p'
 )
@@ -35,17 +43,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-EXIT_CODE = Config.EXIT_CODE_EXIT
+EXIT_CODE = Globals.EXIT_CODE_EXIT
 
 class DatabaseBot(object):
     ''' DatabaseBot '''
     
-    def __init__(self, _db_path):
+    def __init__(self, _config):
         self.logger = logger
         self.logger.critical('Object up: %s' % str(self))
         
-        self.__data_prvider = DataProvider(db_path)
-        self.__cmd_server = IPC_Server(Config.CONFIG_IPC_DP_SERVER_PORT)
+        self.__data_prvider = DataProvider(_config['dbpath'])
+        self.__cmd_server = IPC_Server(Globals.CONFIG_IPC_DP_SERVER_PORT)
         self.__cmd_server.register_cmd('GET_DESC', self.cmd_desc)
         self.__cmd_server.register_cmd('GET_MONTHLY', self.cmd_monthly_data)
         self.__cmd_server.register_cmd('GET_YEARLY', self.cmd_yearly_data)
@@ -116,17 +124,15 @@ class DatabaseBot(object):
             time.sleep(1)
             
 if __name__ == '__main__':
-    logger.critical('\n\n')
-    logger.critical('Startup develop: %s' % str(Config.DEVELOP))
     logger.critical('Startup path: %s' % str(os.getcwd()))
-    logger.critical('Version: %s' %  Config.WLAB_VERSION)
+    logger.critical('Version: %s' %  Globals.WLAB_VERSION)
     
     try:
-        app = DatabaseBot(db_path)
+        app = DatabaseBot(Config)
         app.proc()
     except:
         logger.exception(traceback.format_exc())
-        EXIT_CODE = Config.EXIT_CODE_EXCEPTION
+        EXIT_CODE = Globals.EXIT_CODE_EXCEPTION
         
     time.sleep(1)
     os._exit(EXIT_CODE)

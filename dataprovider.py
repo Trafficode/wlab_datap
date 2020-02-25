@@ -1,5 +1,6 @@
+#-*- coding: utf-8 -*-
 #   ------------------------------------------------------------------------- /
-#   wlab_datap: main.py
+#   wlab_datap: dataprovider.py
 #   Created on: 29 sie 2019
 #   Author: Trafficode
 #   ------------------------------------------------------------------------- /
@@ -19,7 +20,7 @@ class DataProvider(object):
         self.dbPath = _db_path
     
     def stationRegister(self, _uid, _descriptor):
-        uid_path = os.path.join(self.db_path, _uid)
+        uid_path = os.path.join(self.dbPath, _uid)
         if not os.path.exists(uid_path):
             os.makedirs(uid_path)
         desc_f = open(os.path.join(uid_path, "desc.json"), "w")
@@ -31,7 +32,7 @@ class DataProvider(object):
         year, month, day = dt.strftime("%Y-%m-%d").split("-")
         
         for serie in _sample["SERIE"]:
-            dst_sample = os.path.join(self.db_path, _sample["UID"])
+            dst_sample = os.path.join(self.dbPath, _sample["UID"])
             dst_sample = os.path.join(dst_sample, serie)
             dst_sample = os.path.join(dst_sample, year)
             dst_sample = os.path.join(dst_sample, month)
