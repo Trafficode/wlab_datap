@@ -8,6 +8,7 @@
 
 cd /home/wlab/weatherlab/wlabapp/wlab_datap/
 
+
 LOG_FILE=/home/wlab/weatherlab/log/dataprovider.log
 
 log ()	{
