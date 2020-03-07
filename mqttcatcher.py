@@ -83,7 +83,7 @@ class MqttCatcher(object):
                     'uid': _data["uid"],
                     'desc': _data
                     }
-                ipc_send_receive(Globals.CONFIG_IPC_DP_SERVER_PORT, 
+                ipc_send_receive(Globals.IPC_DP_SERVER_PORT, 
                                  'SET_DESC', 
                                  json.dumps(_param),
                                  2000)           
@@ -91,7 +91,7 @@ class MqttCatcher(object):
                 _param = {
                     'sample': _data
                     }
-                ipc_send_receive(Globals.CONFIG_IPC_DP_SERVER_PORT,
+                ipc_send_receive(Globals.IPC_DP_SERVER_PORT,
                                  'SET_SAMPLE', 
                                  json.dumps(_param),
                                  2000)

@@ -15,7 +15,7 @@ class Globals(object):
     EXIT_CODE_EXIT       = 11
     EXIT_CODE_EXCEPTION  = 12
     
-    CONFIG_IPC_DP_SERVER_PORT   = 2001
+    IPC_DP_SERVER_PORT   = 2001
     
 #   ------------------------------------------------------------------------- /
 #    end of file
