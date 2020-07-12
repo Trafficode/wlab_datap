@@ -7,15 +7,15 @@
 
 class Globals(object):
     
-    WLAB_VERSION     = "0.5"
+    WLAB_VERSION     = '1.3'
     
-    RELEASE_CONFIG_FILE  = '/home/wlab/weatherlab/config/config_wlabdatap.json'
+    RELEASE_CONFIG_FILE  = '/home/wlab/weatherlab/config/wlabdatap.json'
     
     EXIT_CODE_REBOOT     = 10
     EXIT_CODE_EXIT       = 11
     EXIT_CODE_EXCEPTION  = 12
     
-    IPC_DP_SERVER_PORT   = 2001
+    IPC_SERVER = '/home/wlab/weatherlab/config/sock'
     
 #   ------------------------------------------------------------------------- /
 #    end of file

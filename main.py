@@ -52,7 +52,7 @@ class DatabaseBot(object):
         self.logger.critical('Object up: %s' % str(self))
         
         self.__data_prvider = DataProvider(_config['dbpath'])
-        self.__cmd_server = IPC_Server(Globals.IPC_DP_SERVER_PORT)
+        self.__cmd_server = IPC_Server(Globals.IPC_SERVER)
         self.__cmd_server.register_cmd('GET_DESC', self.cmd_desc)
         self.__cmd_server.register_cmd('GET_MONTHLY', self.cmd_monthly_data)
         self.__cmd_server.register_cmd('GET_YEARLY', self.cmd_yearly_data)
