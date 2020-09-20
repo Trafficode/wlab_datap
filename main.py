@@ -22,24 +22,27 @@ if os.path.exists(Globals.RELEASE_CONFIG_FILE):
     Config = json.load(config_f)
     config_f.close()
 else:
-    # develop mode
     Config = {
-        'logpath': 'log',
-        'dbpath': 'database'
+        "logging_path": "../../log/",
+        "database_path": "../../database/",
+        "mqtt": [
+            ('mqtt.broker.com', 1883, "", 331),
+            ('mqtt.broker_another_one.com', 1883, "/topic/prefix", 331)
+        ]
     }
 
-if not os.path.exists(Config['logpath']):
-    os.mkdir(Config['logpath'])
-if not os.path.exists(Config['dbpath']):
-    os.mkdir(Config['dbpath'])
+if not os.path.exists(Config['logging_path']):
+    os.mkdir(Config['logging_path'])
+if not os.path.exists(Config['database_path']):
+    os.mkdir(Config['database_path'])
     
 logging.basicConfig(
-    filename = os.path.join(Config['logpath'], 'dataprovider.log'), 
+    filename = os.path.join(Config['logging_path'], 'dataprovider.log'), 
     format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
     atefmt = '%m/%d/%Y %I:%M:%S %p'
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('wlabdatap')
 logger.setLevel(logging.INFO)
 
 EXIT_CODE = Globals.EXIT_CODE_EXIT
@@ -51,8 +54,8 @@ class DatabaseBot(object):
         self.logger = logger
         self.logger.critical('Object up: %s' % str(self))
         
-        self.__data_prvider = DataProvider(_config['dbpath'])
-        self.__cmd_server = IPC_Server(Globals.IPC_SERVER)
+        self.__data_prvider = DataProvider(_config['database_path'])
+        self.__cmd_server = IPC_Server(_config['socket_file_path'])
         self.__cmd_server.register_cmd('GET_DESC', self.cmd_desc)
         self.__cmd_server.register_cmd('GET_MONTHLY', self.cmd_monthly_data)
         self.__cmd_server.register_cmd('GET_YEARLY', self.cmd_yearly_data)
@@ -65,19 +68,26 @@ class DatabaseBot(object):
         # Command registred, just start
         self.__cmd_server.start()
         
-        # Catch data from stations
-        self.data_catcher = MqttCatcher('194.42.111.14', 1883)
-        self.data_catcher.start()
+        self.dataCatch = []
+        for broker in _config['mqtt']:
+            catcher = MqttCatcher(_config['socket_file_path'],
+                                  broker[0], broker[1], 
+                                  _topic_prefix=broker[2],
+                                  _protocol=broker[3])
+            catcher.start()
+            self.dataCatch.append(catcher)
         
     def cmd_station_register(self, _json_param):
         logger.info('cmd_station_register()')
         param = json.loads(_json_param)
+        self.logger.info('Got register data: %s' % str(param))
         self.__data_prvider.stationRegister(param['uid'], param['desc'])
         return json.dumps('OK')
     
     def cmd_store_sample(self, _json_param):
         logger.info('cmd_store_sample()')
         param = json.loads(_json_param)
+        self.logger.info('Got sample data: %s' % str(param))
         self.__data_prvider.stationSampleStore(param['sample'])
         return json.dumps('OK')
     
