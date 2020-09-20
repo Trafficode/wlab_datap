@@ -25,6 +25,7 @@ else:
     Config = {
         "logging_path": "../../log/",
         "database_path": "../../database/",
+        "socket_file_path": "../sock",
         "mqtt": [
             ('mqtt.broker.com', 1883, "", 331),
             ('mqtt.broker_another_one.com', 1883, "/topic/prefix", 331)
@@ -38,7 +39,7 @@ if not os.path.exists(Config['database_path']):
     
 logging.basicConfig(
     filename = os.path.join(Config['logging_path'], 'dataprovider.log'), 
-    format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
+    format = '%(asctime)s - %(name)-24.24s - %(levelname)8s - %(message)s', 
     atefmt = '%m/%d/%Y %I:%M:%S %p'
 )
 
