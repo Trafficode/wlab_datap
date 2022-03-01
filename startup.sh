@@ -14,6 +14,7 @@ log ()	{
 	echo $(date) - 'startup.sh' - $1 >> $LOG_FILE
 }
 
+
 log ' '
 log ' '
 log 'wlab_datap start from: '$(pwd)
