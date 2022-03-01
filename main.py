@@ -38,7 +38,7 @@ if not os.path.exists(Config['database_path']):
     os.mkdir(Config['database_path'])
     
 logging.basicConfig(
-    filename = os.path.join(Config['logging_path'], 'dataprovider.log'), 
+    filename = os.path.join(Config['logging_path'], 'wlab_datap.log'), 
     format = '%(asctime)s - %(name)-24.24s - %(levelname)8s - %(message)s', 
     atefmt = '%m/%d/%Y %I:%M:%S %p'
 )

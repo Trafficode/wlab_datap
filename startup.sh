@@ -8,7 +8,7 @@
 
 cd /home/wlab/weatherlab/wlabapp/wlab_datap/
 
-LOG_FILE=/home/wlab/weatherlab/log/dataprovider.log
+LOG_FILE=/var/log/wlab_datap.log
 
 log ()	{
 	echo $(date) - 'startup.sh' - $1 >> $LOG_FILE
