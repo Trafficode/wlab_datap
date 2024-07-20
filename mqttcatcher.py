@@ -18,7 +18,8 @@ class MqttCatcher(object):
     ''' MqttCatcher '''
     WLAB_AUTH_TOPIC='/wlabauth'
     WLAB_DB_TOPIC='/wlabdb'
-    
+    WLAB_DB_BIN_TOPIC='/wlabdb/bin'
+
     def __init__(self,  _ipc_sock,
                         _mqtt_broker, 
                         _mqtt_port, 
@@ -31,7 +32,8 @@ class MqttCatcher(object):
         self.IpcSockPath = _ipc_sock
         self.AuthTopic = _topic_prefix + self.WLAB_AUTH_TOPIC
         self.SampleTopic = _topic_prefix + self.WLAB_DB_TOPIC
-        
+        self.SampleBinTopic = _topic_prefix + self.WLAB_DB_BIN_TOPIC
+
         if _protocol == 31:
             proto = MQTTv31
         else:
@@ -77,6 +79,7 @@ class MqttCatcher(object):
         try:
             self.client.subscribe(self.WLAB_AUTH_TOPIC)
             self.client.subscribe(self.WLAB_DB_TOPIC)
+            self.client.subscribe(self.WLAB_DB_BIN_TOPIC)
         except:
             self.logger.exception('Exception in on_connect:\n%s' % \
                                     traceback.format_exc())
@@ -101,6 +104,8 @@ class MqttCatcher(object):
                                  'SET_SAMPLE', 
                                  json.dumps(_param),
                                  2000)
+            elif msg.topic == self.SampleBinTopic:
+                pass
             else:
                 self.logger.error('Received message to unknown topic')
         except:
