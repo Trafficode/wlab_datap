@@ -80,8 +80,8 @@ class MqttCatcher(object):
     def __bin2dict(self, packet):
         packet_dict = {
             "version": ord(packet[0]),
-            "id": "%02X:%02X:%02X:%02X:%02X:%02X" % (ord(packet[1]), ord(packet[2]), ord(packet[3]), ord(packet[4]), ord(packet[5]), ord(packet[6])),
-            "ts": struct.unpack('<q', packet[7:15])[0],
+            "id": "%02X%02X%02X%02X%02X%02X" % (ord(packet[6]), ord(packet[5]), ord(packet[4]), ord(packet[3]), ord(packet[2]), ord(packet[1])),
+            "ts": int(struct.unpack('<q', packet[7:15])[0]),
             "temp_act": struct.unpack('<h', packet[15:17])[0],
             "temp_avg": struct.unpack('<h', packet[17:19])[0],
             "temp_max": struct.unpack('<h', packet[19:21])[0],
@@ -110,21 +110,21 @@ class MqttCatcher(object):
         
         packet_wlab_dict = {
             "UID": packet_dict["id"],
-            "TS": packet_dict["ts"] - (2 * utc_offset),
+            "TS": int(packet_dict["ts"] - (2 * utc_offset)),
             "SERIE": {
                 "Temperature": {
-                    "f_avg": "%.1f" % (packet_dict["temp_avg"]/10),
-                    "f_act": "%.1f" % (packet_dict["temp_act"]/10),
-                    "f_min": "%.1f" % (packet_dict["temp_min"]/10),
-                    "f_max": "%.1f" % (packet_dict["temp_max"]/10),
+                    "f_avg": float(packet_dict["temp_avg"])/10.0,
+                    "f_act": float(packet_dict["temp_act"])/10.0,
+                    "f_min": float(packet_dict["temp_min"])/10.0,
+                    "f_max": float(packet_dict["temp_max"])/10.0,
                     "i_min_ts": packet_dict["ts"] + packet_dict["temp_min_ts_offset"],
                     "i_max_ts": packet_dict["ts"] + packet_dict["temp_max_ts_offset"],
                 },
                 "Humidity": {
-                    "f_avg": "%.1f" % (packet_dict["humidity_avg"]),
-                    "f_act": "%.1f" % (packet_dict["humidity_act"]),
-                    "f_min": "%.1f" % (packet_dict["humidity_min"]),
-                    "f_max": "%.1f" % (packet_dict["humidity_max"]),
+                    "f_avg": float(packet_dict["humidity_avg"]),
+                    "f_act": float(packet_dict["humidity_act"]),
+                    "f_min": float(packet_dict["humidity_min"]),
+                    "f_max": float(packet_dict["humidity_max"]),
                     "i_min_ts": packet_dict["ts"] + packet_dict["humidity_min_ts_offset"],
                     "i_max_ts": packet_dict["ts"] + packet_dict["humidity_max_ts_offset"],
                 }
@@ -144,8 +144,8 @@ class MqttCatcher(object):
             
     def on_message(self, client, userdata, msg):
         try:
-            _data = json.loads(str(msg.payload))            
             if msg.topic == self.AuthTopic:
+                _data = json.loads(str(msg.payload))
                 _param = {
                     'uid': _data['uid'],
                     'desc': _data
@@ -155,6 +155,7 @@ class MqttCatcher(object):
                                  json.dumps(_param),
                                  2000)
             elif msg.topic == self.SampleTopic:
+                _data = json.loads(str(msg.payload))
                 _param = {
                     'sample': _data
                     }
