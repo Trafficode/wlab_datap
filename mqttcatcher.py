@@ -13,6 +13,9 @@ from globals import Globals
 from ipc import ipc_send_receive
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import MQTTv311, MQTTv31
+import datetime
+import pytz
+import struct
 
 class MqttCatcher(object):
     ''' MqttCatcher '''
@@ -73,7 +76,62 @@ class MqttCatcher(object):
         except:
             self.logger.exception('Exception in __proc:\n%s' % \
                                     traceback.format_exc())
-            
+    
+    def __bin2dict(self, packet):
+        packet_dict = {
+            "version": ord(packet[0]),
+            "id": "%02X:%02X:%02X:%02X:%02X:%02X" % (ord(packet[1]), ord(packet[2]), ord(packet[3]), ord(packet[4]), ord(packet[5]), ord(packet[6])),
+            "ts": struct.unpack('<q', packet[7:15])[0],
+            "temp_act": struct.unpack('<h', packet[15:17])[0],
+            "temp_avg": struct.unpack('<h', packet[17:19])[0],
+            "temp_max": struct.unpack('<h', packet[19:21])[0],
+            "temp_min": struct.unpack('<h', packet[21:23])[0],
+            "temp_max_ts_offset": struct.unpack('<h', packet[23:25])[0],
+            "temp_min_ts_offset": struct.unpack('<h', packet[25:27])[0],
+            "humidity_act": ord(packet[27]),
+            "humidity_avg": ord(packet[28]),
+            "humidity_max": ord(packet[29]),
+            "humidity_min": ord(packet[30]),
+            "humidity_max_ts_offset": struct.unpack('<h', packet[31:33])[0],
+            "humidity_min_ts_offset": struct.unpack('<h', packet[33:35])[0],
+            "battery_voltage": struct.unpack('<h', packet[35:37])[0],
+        }
+        return(packet_dict)
+
+    def __bin2old(self, packet_dict):
+        # Get the current local time
+        local_dt = datetime.datetime.now()
+        # Get the local timezone
+        local_tz = pytz.timezone('Europe/Warsaw')  # Replace with your local timezone
+        # Localize the datetime object to the local timezone
+        local_dt = local_tz.localize(local_dt, is_dst=None)
+        # Get the UTC offset in hours
+        utc_offset = local_dt.utcoffset().total_seconds()
+        
+        packet_wlab_dict = {
+            "UID": packet_dict["id"],
+            "TS": packet_dict["ts"] - (2 * utc_offset),
+            "SERIE": {
+                "Temperature": {
+                    "f_avg": "%.1f" % (packet_dict["temp_avg"]/10),
+                    "f_act": "%.1f" % (packet_dict["temp_act"]/10),
+                    "f_min": "%.1f" % (packet_dict["temp_min"]/10),
+                    "f_max": "%.1f" % (packet_dict["temp_max"]/10),
+                    "i_min_ts": packet_dict["ts"] + packet_dict["temp_min_ts_offset"],
+                    "i_max_ts": packet_dict["ts"] + packet_dict["temp_max_ts_offset"],
+                },
+                "Humidity": {
+                    "f_avg": "%.1f" % (packet_dict["humidity_avg"]),
+                    "f_act": "%.1f" % (packet_dict["humidity_act"]),
+                    "f_min": "%.1f" % (packet_dict["humidity_min"]),
+                    "f_max": "%.1f" % (packet_dict["humidity_max"]),
+                    "i_min_ts": packet_dict["ts"] + packet_dict["humidity_min_ts_offset"],
+                    "i_max_ts": packet_dict["ts"] + packet_dict["humidity_max_ts_offset"],
+                }
+            }
+        }
+        return(packet_wlab_dict)
+
     def on_connect(self, client, userdata, flags, rc):
         self.logger.critical('on_connect()')
         try:
@@ -105,7 +163,14 @@ class MqttCatcher(object):
                                  json.dumps(_param),
                                  2000)
             elif msg.topic == self.SampleBinTopic:
-                pass
+                _bin_data_dict = self.__bin2dict(msg.payload)
+                _param = {
+                    'sample': self.__bin2old(_bin_data_dict)
+                    }
+                ipc_send_receive(self.IpcSockPath,
+                                 'SET_SAMPLE', 
+                                 json.dumps(_param),
+                                 2000)
             else:
                 self.logger.error('Received message to unknown topic')
         except:
