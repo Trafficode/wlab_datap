@@ -99,18 +99,9 @@ class MqttCatcher(object):
         return(packet_dict)
 
     def __bin2old(self, packet_dict):
-        # Get the current local time
-        local_dt = datetime.datetime.now()
-        # Get the local timezone
-        local_tz = pytz.timezone('Europe/Warsaw')  # Replace with your local timezone
-        # Localize the datetime object to the local timezone
-        local_dt = local_tz.localize(local_dt, is_dst=None)
-        # Get the UTC offset in hours
-        utc_offset = local_dt.utcoffset().total_seconds()
-        
         packet_wlab_dict = {
             "UID": packet_dict["id"],
-            "TS": int(packet_dict["ts"] - (2 * utc_offset)),
+            "TS": int(packet_dict["ts"]),
             "SERIE": {
                 "Temperature": {
                     "f_avg": float(packet_dict["temp_avg"])/10.0,
