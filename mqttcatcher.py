@@ -17,6 +17,7 @@ import datetime
 import pytz
 import struct
 
+
 class MqttCatcher(object):
     ''' MqttCatcher '''
     WLAB_AUTH_TOPIC='/wlabauth'
@@ -78,8 +79,9 @@ class MqttCatcher(object):
                                     traceback.format_exc())
     
     def __bin2dict(self, packet):
+        version1_len = 37
         packet_dict = {
-            "version": ord(packet[0]),
+            "version": ord(packet[0]) & 0x1F,
             "id": "%02X%02X%02X%02X%02X%02X" % (ord(packet[6]), ord(packet[5]), ord(packet[4]), ord(packet[3]), ord(packet[2]), ord(packet[1])),
             "ts": int(struct.unpack('<q', packet[7:15])[0]),
             "temp_act": struct.unpack('<h', packet[15:17])[0],
@@ -96,7 +98,7 @@ class MqttCatcher(object):
             "humidity_min_ts_offset": struct.unpack('<h', packet[33:35])[0],
             "battery_voltage": struct.unpack('<h', packet[35:37])[0],
         }
-        return(packet_dict)
+        return(packet_dict, version1_len)
 
     def __bin2old(self, packet_dict):
         packet_wlab_dict = {
@@ -155,14 +157,18 @@ class MqttCatcher(object):
                                  json.dumps(_param),
                                  2000)
             elif msg.topic == self.SampleBinTopic:
-                _bin_data_dict = self.__bin2dict(msg.payload)
-                _param = {
-                    'sample': self.__bin2old(_bin_data_dict)
-                    }
-                ipc_send_receive(self.IpcSockPath,
-                                 'SET_SAMPLE', 
-                                 json.dumps(_param),
-                                 2000)
+                _samples_n = 1 + (ord(msg.payload[0]) >> 5)
+                _offset = 0
+                for _ in range(_samples_n):
+                    _bin_data_dict, _sample_len = self.__bin2dict(msg.payload[_offset:])
+                    _offset += _sample_len
+                    _param = {
+                        'sample': self.__bin2old(_bin_data_dict)
+                        }
+                    ipc_send_receive(self.IpcSockPath,
+                                    'SET_SAMPLE', 
+                                    json.dumps(_param),
+                                    2000)
             else:
                 self.logger.error('Received message to unknown topic')
         except:
